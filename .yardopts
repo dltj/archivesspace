@@ -1,0 +1,10 @@
+--main docs/Overview.md
+--markup-provider=redcarpet
+--markup=markdown
+--exclude /backend/
+--exclude /frontend/
+--exclude /migrations/
+--exclude /selenium/
+--exclude /common/
+-
+docs/Overview.md
