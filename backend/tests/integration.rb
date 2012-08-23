@@ -153,12 +153,22 @@ end
 
 def main
 
-  # start the backend
-  server = Process.spawn({:JAVA_OPTS => "-Xmx64M -XX:MaxPermSize=64M"},
-                         "../../build/run", "backend:devserver:integration",
-                         "-Daspace.backend.port=#{$port}",
-                         "-Daspace_integration_test=1")
+  standalone = true
 
+  if ENV["ASPACE_BACKEND_URL"]
+    $url = ENV["ASPACE_BACKEND_URL"]
+    standalone = false
+  end
+
+  server = nil
+
+  if standalone
+    # start the backend
+    server = Process.spawn({:JAVA_OPTS => "-Xmx64M -XX:MaxPermSize=64M"},
+                           "../../build/run", "backend:devserver:integration",
+                           "-Daspace.backend.port=#{$port}",
+                           "-Daspace_integration_test=1")
+  end
 
   while true
     begin
@@ -180,11 +190,13 @@ def main
     status = 1
   end
 
-  Process.kill(15, server)
-  begin
-    Process.waitpid(server)
-  rescue
-    # Already dead.
+  if server
+    Process.kill(15, server)
+    begin
+      Process.waitpid(server)
+    rescue
+      # Already dead.
+    end
   end
 
   exit(status)

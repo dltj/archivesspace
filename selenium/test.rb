@@ -295,15 +295,25 @@ end
 
 def main
 
-  # start the backend
-  backend = Process.spawn({:JAVA_OPTS => "-Xmx64M -XX:MaxPermSize=64M"},
-                          "../build/run", "backend:devserver:integration",
-                          "-Daspace.backend.port=#{$backend_port}",
-                          "-Daspace_integration_test=1")
+  standalone = true
 
-  frontend = Process.spawn({:JAVA_OPTS => "-Xmx128M -XX:MaxPermSize=96M -Daspace.config.backend_url=#{$backend}"},
-                           "../build/run", "frontend:devserver",
-                          "-Daspace.frontend.port=#{$frontend_port}")
+  if ENV["ASPACE_BACKEND_URL"] and ENV["ASPACE_FRONTEND_URL"]
+    $backend = ENV["ASPACE_BACKEND_URL"]
+    $frontend = ENV["ASPACE_FRONTEND_URL"]
+    standalone = false
+  end
+
+  (backend, frontend) = [false, false]
+  if standalone
+    backend = Process.spawn({:JAVA_OPTS => "-Xmx64M -XX:MaxPermSize=64M"},
+                            "../build/run", "backend:devserver:integration",
+                            "-Daspace.backend.port=#{$backend_port}",
+                            "-Daspace_integration_test=1")
+
+    frontend = Process.spawn({:JAVA_OPTS => "-Xmx128M -XX:MaxPermSize=96M -Daspace.config.backend_url=#{$backend}"},
+                             "../build/run", "frontend:devserver",
+                             "-Daspace.frontend.port=#{$frontend_port}")
+  end
 
 
   while true
@@ -333,8 +343,8 @@ def main
     status = 1
   end
 
-  kill(backend)
-  kill(frontend)
+  kill(backend) if backend
+  kill(frontend) if frontend
 
   exit(status)
 end
